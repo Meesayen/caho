@@ -13,9 +13,10 @@ const cls = css`
   width: 100vw;
   height: 100vh;
 `
+const isDev = process.env.NODE_ENV === 'development'
 
 export const App: React.FC = () => {
-  const socket = io('http://localhost:3090')
+  const socket = io(isDev ? 'http://localhost:3090' : '')
   return (
     <div className={cls}>
       <SocketContext.Provider value={{ socket }}>

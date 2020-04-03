@@ -61,7 +61,10 @@ const clsVideoId = css`
   }
 `
 
-const PlayerVideo: React.FC<{ stream: any }> = ({ stream }) => {
+const PlayerVideo: React.FC<{ stream: any; isMe: boolean }> = ({
+  stream,
+  isMe
+}) => {
   if (!stream) return null
   console.log(stream)
   return (
@@ -71,6 +74,7 @@ const PlayerVideo: React.FC<{ stream: any }> = ({ stream }) => {
           if (video) video.srcObject = stream
         }}
         autoPlay={true}
+        muted={isMe}
       ></video>
     </div>
   )
@@ -110,7 +114,7 @@ const StatusBar: React.FC<Props> = ({ status }) => {
     const passivePeers: any[] = []
     let myStream
     navigator.getUserMedia(
-      { video: true, audio: false },
+      { video: true, audio: true },
       stream => {
         console.log('got stream', socket.id)
         sendHi({ peerId: socket.id })
@@ -185,7 +189,7 @@ const StatusBar: React.FC<Props> = ({ status }) => {
       {status.players.map(p => (
         <div className="block u--flx -col" key={p.id}>
           <PlayerIndicator player={p} />
-          <PlayerVideo stream={streams[p.id]} />
+          <PlayerVideo stream={streams[p.id]} isMe={p.id === socket.id} />
         </div>
       ))}
     </div>
