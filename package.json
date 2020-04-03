@@ -9,6 +9,7 @@
     "watch:client": "parcel ./src/client/index.html",
     "watch:server": "nodemon --experimental-modules ./src/server/index.js",
     "dev": "run-p watch:client watch:server",
+    "build": "npm run build:client",
     "start": "node --experimental-modules ./src/server/index.js",
     "test": "exit 0"
   },
