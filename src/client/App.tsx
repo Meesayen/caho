@@ -1,0 +1,31 @@
+import React, { lazy, Suspense } from 'react'
+import { SocketContext } from '~utils/socket'
+import io from 'socket.io-client'
+import { Route } from 'wouter'
+import { css } from 'emotion'
+
+const Lobby = lazy(() => import('~views/Lobby'))
+const Game = lazy(() => import('~views/Game'))
+
+const cls = css`
+  color: #334855;
+  background-color: #fefaf9;
+  width: 100vw;
+  height: 100vh;
+`
+
+export const App: React.FC = () => {
+  const socket = io('http://localhost:3090')
+  return (
+    <div className={cls}>
+      <SocketContext.Provider value={{ socket }}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Route path="/lobby" component={Lobby} />
+          <Route path="/game/:gameId?">
+            {params => <Game gameId={params.gameId} />}
+          </Route>
+        </Suspense>
+      </SocketContext.Provider>
+    </div>
+  )
+}

@@ -1,0 +1,47 @@
+{
+  "name": "cah-online",
+  "version": "1.0.0",
+  "description": "Cards Against Humanity Online",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build:client": "parcel build ./src/client/index.html",
+    "watch:client": "parcel ./src/client/index.html",
+    "watch:server": "nodemon --experimental-modules ./src/server/index.js",
+    "dev": "run-p watch:client watch:server",
+    "start": "node --experimental-modules ./src/server/index.js",
+    "test": "exit 0"
+  },
+  "author": "Meesayen",
+  "license": "MIT",
+  "dependencies": {
+    "@emotion/core": "^10.0.28",
+    "@types/simple-peer": "^9.6.0",
+    "emotion": "^10.0.27",
+    "polka": "^0.5.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "simple-peer": "^9.6.2",
+    "sirv": "^0.4.2",
+    "socket.io": "^2.3.0",
+    "uid": "^1.0.0",
+    "wouter": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.26",
+    "@types/react-dom": "^16.9.5",
+    "@types/socket.io": "^2.1.4",
+    "@types/socket.io-client": "^1.4.32",
+    "nodemon": "^2.0.2",
+    "npm-run-all": "^4.1.5",
+    "parcel-bundler": "^1.12.4",
+    "typescript": "^3.8.3"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "src/client/*",
+      "dist/*",
+      ".cache"
+    ]
+  }
+}
