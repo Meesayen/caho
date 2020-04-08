@@ -7,7 +7,9 @@ const globalStyles = css`
   * {
     box-sizing: border-box;
   }
-
+  .u--ghost {
+    opacity: 0;
+  }
   .u--flx {
     display: flex;
 
@@ -18,6 +20,12 @@ const globalStyles = css`
 
     &.-sb {
       justify-content: space-between;
+    }
+    &.-se {
+      justify-content: space-evenly;
+    }
+    &.-sa {
+      justify-content: space-around;
     }
 
     &:not(.-col) {
@@ -37,6 +45,25 @@ const globalStyles = css`
         align-items: center;
       }
     }
+  }
+
+  .card,
+  .deck {
+    width: 160px;
+    height: 256px;
+    border-radius: 14px;
+    border: 1px solid #0003;
+    box-shadow: 1px 1px 4px #0002;
+    padding: 24px 16px;
+    font-family: helvetica;
+    letter-spacing: 0.3px;
+
+    &.-question {
+      background: linear-gradient(150deg, #242627, #242627d6);
+    }
+  }
+  .deck {
+    box-shadow: 3px 3px #36404c, 4px 4px 6px #000a;
   }
 `
 

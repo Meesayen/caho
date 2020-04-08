@@ -44,5 +44,8 @@
       "dist/*",
       ".cache"
     ]
-  }
+  },
+  "browserslist": [
+    "last 1 Chrome versions"
+  ]
 }

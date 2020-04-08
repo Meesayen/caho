@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react'
 import { SocketContext } from '~utils/socket'
 import io from 'socket.io-client'
 import { Route } from 'wouter'
-import { css } from 'emotion'
+import { css, cx } from 'emotion'
 
 const Lobby = lazy(() => import('~views/Lobby'))
 const Game = lazy(() => import('~views/Game'))
@@ -18,7 +18,7 @@ const isDev = process.env.NODE_ENV === 'development'
 export const App: React.FC = () => {
   const socket = io(isDev ? 'http://localhost:3090' : '')
   return (
-    <div className={cls}>
+    <div className={cx(cls, 'u--flx -col')}>
       <SocketContext.Provider value={{ socket }}>
         <Suspense fallback={<div>Loading...</div>}>
           <Route path="/lobby" component={Lobby} />

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { css, cx } from 'emotion'
-import SimplePeer from 'simple-peer'
 import { useSocketContext, useEmitEvent } from '~utils/socket'
-import { GameSession, Player } from '~types'
-import { useGameContext } from '~utils/gameContext'
+import { Game, Player } from '~types'
+import { useStreams } from '~utils/streams'
 
 const clsPlayerId = css`
   width: 100%;
@@ -52,9 +51,10 @@ const PlayerIndicator: React.FC<{ player: Player }> = ({ player }) => {
 
 const clsVideoId = css`
   width: 100%;
-  height: calc(100vw / 8 * 10 / 16);
+  height: calc(100vw / 8 * 3 / 4);
   background: #000d;
 
+  div,
   video {
     width: 100%;
     height: 100%;
@@ -65,30 +65,71 @@ const PlayerVideo: React.FC<{ stream: any; isMe: boolean }> = ({
   stream,
   isMe
 }) => {
-  if (!stream) return null
-  console.log(stream)
+  const addStream = useCallback(
+    video => {
+      if (video) video.srcObject = stream
+    },
+    [stream]
+  )
+
   return (
     <div className={clsVideoId}>
-      <video
-        ref={video => {
-          if (video) video.srcObject = stream
-        }}
-        autoPlay={true}
-        muted={isMe}
-      ></video>
+      {stream ? (
+        <video ref={addStream} autoPlay={true} muted={isMe}></video>
+      ) : (
+        <div></div>
+      )}
     </div>
   )
 }
 
-const clsId = css`
-  position: fixed;
+const readyBtnCls = css`
+  padding: 8px 16px;
+  pointer-events: none;
+`
+const readyCls = css`
+  ${readyBtnCls}
+  background: #080a;
+  color: #fffe;
+`
+const notReadyCls = css`
+  ${readyBtnCls}
+  border: 1px solid #0803;
+  color: #080a;
+
+  &.-enabled {
+    pointer-events: all;
+  }
+
+  &:hover {
+    background: #0802;
+    cursor: pointer;
+  }
+`
+const ReadyButton: React.FC<{
+  player: Player
+  isMe: boolean
+  onClick: (e: any) => void
+}> = ({ player, isMe, onClick }) => {
+  if (player.phase === 'ready') {
+    return <div className={cx(readyCls, 'u--flx -cc')}>Ready!</div>
+  }
+  return (
+    <div
+      className={cx(notReadyCls, 'u--flx -cc', isMe ? '-enabled' : '')}
+      onClick={onClick}
+    >
+      Ready?
+    </div>
+  )
+}
+
+const cls = css`
   width: 100vw;
-  top: 0;
-  left: 0;
+  border-bottom: 1px solid #0001;
 
   .block {
     width: calc(100vw / 8);
-    height: calc(100vw / 8 * 10 / 16 + 50px);
     box-shadow: 0 1px 3px #0001;
 
     & + & {
@@ -98,100 +139,27 @@ const clsId = css`
 `
 
 interface Props {
-  status: GameSession
+  game: Game
+  onReady: (e: any) => void
 }
-const StatusBar: React.FC<Props> = ({ status }) => {
+const StatusBar: React.FC<Props> = ({ game, onReady }) => {
   const { socket } = useSocketContext()
-  const [streams, setStreams] = useState({})
-  console.log(status)
+  const streams = useStreams()
 
-  const sendHi = useEmitEvent('streams:peers-hi')
-  const sendAck = useEmitEvent('streams:peers-ack')
-  const sendActiveSignal = useEmitEvent('streams:peers-active-signal')
-  const sendPassiveSignal = useEmitEvent('streams:peers-passive-signal')
-  useEffect(() => {
-    const activePeers: any[] = []
-    const passivePeers: any[] = []
-    let myStream
-    navigator.getUserMedia(
-      { video: true, audio: true },
-      stream => {
-        console.log('got stream', socket.id)
-        sendHi({ peerId: socket.id })
-        myStream = stream
-        setStreams(streams => {
-          return { ...streams, [socket.id]: stream }
-        })
-      },
-      () => {}
-    )
-
-    socket.on('streams:peers-hi', ({ peerId }: { peerId: string }) => {
-      console.log('peers-hi')
-      console.log(streams)
-      const peer = new SimplePeer({
-        initiator: false,
-        stream: myStream
-      })
-
-      passivePeers.push(peer)
-
-      peer.on('stream', stream => {
-        console.log('on peer stream from hi')
-        setStreams(streams => {
-          return { ...streams, [peerId]: stream }
-        })
-      })
-
-      peer.on('signal', data => {
-        console.log('signal from hi')
-        sendActiveSignal({ data })
-      })
-
-      sendAck({ peerId: socket.id })
-    })
-
-    socket.on('streams:peers-ack', ({ peerId }: { peerId: string }) => {
-      console.log('peers-ack')
-      console.log(streams)
-      const peer = new SimplePeer({
-        initiator: true,
-        stream: myStream
-      })
-
-      activePeers.push(peer)
-
-      peer.on('stream', stream => {
-        console.log('on peer stream from ack')
-        setStreams(streams => {
-          return { ...streams, [peerId]: stream }
-        })
-      })
-
-      peer.on('signal', data => {
-        console.log('signal from ack')
-        sendPassiveSignal({ data })
-      })
-    })
-
-    socket.on('streams:peers-passive-signal', ({ data }) => {
-      console.log('passive', passivePeers)
-      passivePeers.forEach(peer => peer.signal(data))
-    })
-    socket.on('streams:peers-active-signal', ({ data }) => {
-      console.log('active', activePeers)
-      activePeers.forEach(peer => peer.signal(data))
-    })
-  }, [])
-  console.log(streams)
   return (
-    <div className={cx(clsId, 'u--flx')}>
-      {status.players.map(p => (
-        <div className="block u--flx -col" key={p.id}>
-          <PlayerIndicator player={p} />
-          <PlayerVideo stream={streams[p.id]} isMe={p.id === socket.id} />
-        </div>
-      ))}
+    <div className={cx(cls, 'u--flx')}>
+      {game.players.map(p => {
+        const isMe = p.id === socket.id
+        return (
+          <div className="block u--flx -col" key={p.id}>
+            <PlayerIndicator player={p} />
+            <PlayerVideo stream={streams[p.id]} isMe={isMe} />
+            {game.status !== 'started' ? (
+              <ReadyButton player={p} isMe={isMe} onClick={onReady} />
+            ) : null}
+          </div>
+        )
+      })}
     </div>
   )
 }

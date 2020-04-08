@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { css } from 'emotion'
 import { Link } from 'wouter'
 import { useSocketData, useEmit, useEmitEvent } from '~utils/socket'
-import { GameSession } from '~types'
+import { Game } from '~types'
 
 const cls = css`
   padding-top: 240px;
@@ -34,7 +34,7 @@ const cls = css`
       padding: 8px 16px;
       border: 1px solid #0003;
       border-radius: 3px;
-      max-width: 70%;
+      max-width: 95%;
       font-weight: bold;
     }
 
@@ -49,7 +49,7 @@ const cls = css`
 `
 
 const Lobby: React.FC = () => {
-  const [data, err] = useSocketData<GameSession>('game:status')
+  const [data, err] = useSocketData<Game>('game:status')
   const createNewGame = useEmitEvent('game:create-new')
 
   useEffect(() => {
@@ -59,6 +59,7 @@ const Lobby: React.FC = () => {
   if (err) return null
   if (!data) return null
 
+  const linkUrl = `${window.location.origin}/${data.id}`
   return (
     <div className={cls}>
       <div className="panel u--flx -col -cc -sb">
@@ -67,7 +68,7 @@ const Lobby: React.FC = () => {
           <p>
             Copy and share the following link with your friends and then hit GO!
           </p>
-          <div className="link">{`http://some-link.com/${data.id}`}</div>
+          <div className="link">{linkUrl}</div>
         </div>
         <Link className="btn" to={`/game/${data.id}`}>
           GO!
