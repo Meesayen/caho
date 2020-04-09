@@ -5,6 +5,7 @@ import { Route } from 'wouter'
 import { css, cx } from 'emotion'
 
 const Lobby = lazy(() => import('~views/Lobby'))
+const Sorry = lazy(() => import('~views/Sorry'))
 const Game = lazy(() => import('~views/Game'))
 
 const cls = css`
@@ -22,6 +23,7 @@ export const App: React.FC = () => {
       <SocketContext.Provider value={{ socket }}>
         <Suspense fallback={<div>Loading...</div>}>
           <Route path="/lobby" component={Lobby} />
+          <Route path="/sorry" component={Sorry} />
           <Route path="/game/:gameId?">
             {params => <Game gameId={params.gameId} />}
           </Route>
