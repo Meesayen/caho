@@ -5,7 +5,7 @@ export interface GameContext {
   gameId: string
 }
 const defaultContext: GameContext = {
-  gameId: ''
+  gameId: '',
 }
 
 export const GameContext = createContext<GameContext>(defaultContext)

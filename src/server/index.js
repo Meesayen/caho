@@ -15,7 +15,7 @@ if (NODE_ENV === 'production') {
     .use(
       sirv('dist', {
         maxAge: 31536000, // 1Y
-        immutable: true
+        immutable: true,
       })
     )
     .get('/*', (req, res) => {

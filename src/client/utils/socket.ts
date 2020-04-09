@@ -3,7 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
-  useCallback
+  useCallback,
 } from 'react'
 import io from 'socket.io-client'
 
@@ -17,9 +17,9 @@ const defaultContext: SocketContext = {
       get() {
         console.log('You need to provide a socket client!')
         return () => {}
-      }
+      },
     }
-  ) as typeof io.Socket
+  ) as typeof io.Socket,
 }
 
 export const SocketContext = createContext<SocketContext>(defaultContext)

@@ -34,12 +34,11 @@ export function useStreams() {
       try {
         myStream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: true
+          audio: true,
         })
         setStreams(streams => {
           return { ...streams, [socket.id]: myStream! }
         })
-        console.log(socket.id)
         sendSyn({ peerId: socket.id })
       } catch (err) {
         /* TODO: handle the error */
@@ -49,15 +48,13 @@ export function useStreams() {
     getMediaStream()
 
     socket.on('streams:peers-syn', ({ peerId }: AckSynResponse) => {
-      console.log('syn')
       if (!myStream) return
       const peer = new SimplePeer({
         initiator: false,
-        stream: myStream
+        stream: myStream,
       })
 
       peer.on('signal', data => {
-        console.log('signal from syn')
         sendActiveSignal({ data })
       })
 
@@ -70,7 +67,6 @@ export function useStreams() {
       })
 
       peer.on('close', () => {
-        console.log('close from syn')
         // sendPassiveSignal({ data })
       })
 
@@ -78,15 +74,13 @@ export function useStreams() {
     })
 
     socket.on('streams:peers-ack', ({ peerId }: AckSynResponse) => {
-      console.log('ack')
       if (!myStream) return
       const peer = new SimplePeer({
         initiator: true,
-        stream: myStream
+        stream: myStream,
       })
 
       peer.on('signal', data => {
-        console.log('signal from ack')
         sendPassiveSignal({ data })
       })
 
@@ -99,7 +93,6 @@ export function useStreams() {
       })
 
       peer.on('close', () => {
-        console.log('close from ack')
         // sendPassiveSignal({ data })
       })
     })
@@ -112,7 +105,6 @@ export function useStreams() {
     })
 
     socket.on('game:player-left', ({ peerId }: AckSynResponse) => {
-      console.log('peer left', peerId)
       setStreams(streams => {
         delete streams[peerId]
         return { ...streams }
