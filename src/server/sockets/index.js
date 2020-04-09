@@ -3,31 +3,31 @@ import uid from 'uid'
 
 const ANSWER_CARDS = [
   {
-    text: 'Answer 1'
+    text: 'Answer 1',
   },
   {
-    text: 'Answer 2'
+    text: 'Answer 2',
   },
   {
-    text: 'Answer 3'
+    text: 'Answer 3',
   },
   {
-    text: 'Answer 4'
-  }
+    text: 'Answer 4',
+  },
 ]
 const QUESTION_CARDS = [
   {
-    text: 'Question BLANK 1'
+    text: 'Question BLANK 1',
   },
   {
-    text: 'Question 2 BLANK'
+    text: 'Question 2 BLANK',
   },
   {
-    text: 'BLANK: Question 3 BLANK'
+    text: 'BLANK: Question 3 BLANK',
   },
   {
-    text: 'BLANK: Question 4'
-  }
+    text: 'BLANK: Question 4',
+  },
 ]
 
 const GAMES = {}
@@ -98,11 +98,11 @@ function createNewPlayer(gameId, socket, idx, puid) {
   GAME_SOCKETS[gameId][socket.id] = socket
 
   const oldPlayer = PLAYERS_LIMBO[puid]
-  if (oldPlayer) {
+  if (oldPlayer && oldPlayer.public.gameId === gameId) {
     delete PLAYERS_LIMBO[puid]
     PLAYERS[socket.id] = {
       gameId,
-      cards: oldPlayer.private.cards
+      cards: oldPlayer.private.cards,
     }
     oldPlayer.public.id = socket.id
     oldPlayer.public.status = 'online'
@@ -113,8 +113,8 @@ function createNewPlayer(gameId, socket, idx, puid) {
     gameId,
     cards: {
       answers: [],
-      question: null
-    }
+      question: null,
+    },
   }
   return {
     id: socket.id,
@@ -125,7 +125,7 @@ function createNewPlayer(gameId, socket, idx, puid) {
     avatar: '',
     gameId,
     role: 'player',
-    answers: []
+    answers: [],
   }
 }
 function createNewGame(id, socket) {
@@ -138,7 +138,7 @@ function createNewGame(id, socket) {
     players: [createNewPlayer(id, socket, 0)],
     questions: createShuffledDeck(QUESTION_CARDS),
     answers: createShuffledDeck(ANSWER_CARDS),
-    question: null
+    question: null,
   }
   socket.emit('game:status', GAMES[id])
 }
@@ -153,7 +153,7 @@ function updateGame(gameId, props) {
 }
 
 function updatePlayer(id, gameId, props) {
-  console.log('update player')
+  console.log('update player', id, props)
   const game = GAMES[gameId]
   const sockets = GAME_SOCKETS[gameId]
   if (!game) return
@@ -165,9 +165,10 @@ function updatePlayer(id, gameId, props) {
     return p
   })
   const player = game.players.find(p => p.id === id)
+  console.log(player)
   sockets[id].emit('player:status', {
     ...player,
-    cards: PLAYERS[player.id].cards
+    cards: PLAYERS[player.id].cards,
   })
   broadcastGameStatus(game)
 }
@@ -181,7 +182,7 @@ function removePlayer(socket, gameId) {
     private: PLAYERS[socket.id],
     public: { ...player },
     expire: 1 * 60 * 1000, // 2 minutes
-    created: Date.now()
+    created: Date.now(),
   }
 
   delete PLAYERS[socket.id]
@@ -211,16 +212,22 @@ function dealCardsToPlayers(gameId) {
   if (!game) return
 
   const players = game.players
-  players.forEach(p => {
-    const answers = PLAYERS[p.id].cards.answers
-    const toPick = 1 - answers.length
-    // const toPick = 10 - answers.length
-    const newCards = game.answers.splice(0, toPick).map(i => ANSWER_CARDS[i])
-    PLAYERS[p.id].cards.answers = answers.concat(newCards)
-    gameSockets[p.id].emit('player:status', {
-      ...p,
-      cards: PLAYERS[p.id].cards
-    })
+  players.forEach((p, i) => {
+    // NOTE: adding a very small delay between cards dealing to avoid
+    // some messaging mess up
+    setTimeout(() => {
+      const answers = PLAYERS[p.id].cards.answers
+      const toPick = 1 - answers.length
+      // const toPick = 10 - answers.length
+      const newCards = game.answers.splice(0, toPick).map(i => {
+        return { ...ANSWER_CARDS[i], id: i }
+      })
+      PLAYERS[p.id].cards.answers = answers.concat(newCards)
+      gameSockets[p.id].emit('player:status', {
+        ...p,
+        cards: PLAYERS[p.id].cards,
+      })
+    }, 25 * i)
   })
 }
 
@@ -228,12 +235,16 @@ function chooseJudge(gameId) {
   const game = GAMES[gameId]
 
   if (!game) return
-  const judgeId = shuffle(game.players.map(p => p.id))[0]
+  const playerIds = game.players.map(p => p.id)
+  const judgeId =
+    playerIds.length > 2
+      ? shuffle(playerIds)[0]
+      : playerIds[Math.floor(Math.random() * 2)]
   game.players = game.players.map(p => {
     if (p.id !== judgeId) return p
     return {
       ...p,
-      role: 'judge'
+      role: 'judge',
     }
   })
   broadcastGameStatus(game)
@@ -258,7 +269,7 @@ export function init(server) {
       const game = GAMES[gameId]
       if (game && game.status === 'lobby') {
         updateGame(gameId, {
-          status: 'starting'
+          status: 'starting',
         })
       }
     })
@@ -272,7 +283,7 @@ export function init(server) {
           status: 'started',
           players: game.players.map(p => {
             return { ...p, phase: 'cards-picking' }
-          })
+          }),
         })
         dealCardsToPlayers(gameId)
       }
@@ -291,6 +302,10 @@ export function init(server) {
         return socket.emit('game:status', { error: 403 })
       }
 
+      if (!PLAYERS_LIMBO[puid] && game.status !== 'lobby') {
+        return socket.emit('game:status', { error: 403 })
+      }
+
       if (!game.players.find(p => p.id === socket.id)) {
         // create new player and join
         const player = createNewPlayer(
@@ -300,7 +315,7 @@ export function init(server) {
           puid
         )
 
-        if (puid) {
+        if (puid === player.uid) {
           game.players = game.players.map(p => {
             if (p.uid === player.uid) return player
             return p
@@ -315,62 +330,128 @@ export function init(server) {
       broadcastGameStatus(GAMES[gameId])
       socket.emit('player:status', {
         ...player,
-        cards: PLAYERS[player.id].cards
+        cards: PLAYERS[player.id].cards,
       })
     })
     socket.on('game:leave-game', ({ gameId }) => {
       removePlayer(socket, gameId)
     })
+    socket.on('game:card-reveal', ({ gameId, cardId }) => {
+      const players = GAMES[gameId].players
+      const player = players.find(p => {
+        return p.answers.find(c => c.id === cardId)
+      })
+      const answers = player.answers.map(c => {
+        if (c.id === cardId) return ANSWER_CARDS[cardId]
+        return c
+      })
+      updatePlayer(player.id, gameId, {
+        answers,
+      })
+    })
+    socket.on('game:all-cards-revealed', ({ gameId }) => {
+      console.log('yes')
+      const players = GAMES[gameId].players
+      const judge = players.find(p => {
+        return p.role === 'judge'
+      })
+
+      updateGame(gameId, {
+        phase: 'select-winner',
+      })
+      updatePlayer(judge.id, gameId, {
+        phase: 'winner-selecting',
+      })
+    })
 
     // player actions - game
     socket.on('player:is-ready', ({ gameId }) => {
       updatePlayer(socket.id, gameId, {
-        phase: 'ready'
+        phase: 'ready',
       })
     })
 
     socket.on('player:cards-picked', ({ gameId }) => {
       console.log('player:cards-picked')
       updatePlayer(socket.id, gameId, {
-        phase: 'cards-picked'
+        phase: 'cards-picked',
       })
 
       // if all players have picked their cards
       if (GAMES[gameId].players.every(p => p.phase === 'cards-picked')) {
         // move to the next phase - question picking
         updateGame(gameId, {
-          phase: 'pick-question'
+          phase: 'pick-question',
         })
         for (const player of GAMES[gameId].players) {
           if (player.role === 'judge') {
+            console.log('question-picking')
             updatePlayer(player.id, gameId, {
-              phase: 'question-picking'
+              phase: 'question-picking',
             })
-            continue
+          } else {
+            updatePlayer(player.id, gameId, {
+              phase: 'waiting',
+            })
           }
-          updatePlayer(player.id, gameId, {
-            phase: 'waiting'
-          })
         }
       }
     })
+
     socket.on('player:pick-question', ({ gameId }) => {
       const game = GAMES[gameId]
       const questionId = game.questions.pop()
       game.question = QUESTION_CARDS[questionId]
       game.phase = 'pick-answers'
       updateGame(gameId, {
-        phase: 'pick-answers'
+        phase: 'pick-answers',
       })
       for (const player of game.players) {
         if (player.role === 'judge') {
           updatePlayer(player.id, gameId, {
-            phase: 'waiting-answers'
+            phase: 'waiting-answers',
           })
           continue
         }
         updatePlayer(player.id, gameId, {
-          phase: 'answer-picking'
+          phase: 'answer-picking',
+        })
+      }
+    })
+
+    socket.on('player:pick-answer', ({ gameId, cardId }) => {
+      const game = GAMES[gameId]
+      if (game.phase !== 'pick-answers') return
+
+      const player = game.players.find(p => p.id === socket.id)
+      if (player.role !== 'player') return
+      if (player.phase !== 'answer-picking') return
+
+      // TODO: check if card sent is effectively in player's hand
+      // to avoid cheating
+
+      // TODO: allow multiple answers
+      PLAYERS[player.id].cards.answers = PLAYERS[
+        player.id
+      ].cards.answers.filter(c => c.id !== cardId)
+      updatePlayer(player.id, gameId, {
+        phase: 'answer-picked',
+        answers: [{ id: cardId }],
+      })
+
+      if (
+        game.players.every(p => {
+          if (p.role === 'player') return p.phase === 'answer-picked'
+          if (p.role === 'judge') return p.phase === 'waiting-answers'
+          return false
+        })
+      ) {
+        const judge = game.players.find(p => p.role === 'judge')
+        updateGame(gameId, {
+          phase: 'read-answers',
+        })
+        updatePlayer(judge.id, gameId, {
+          phase: 'answer-reading',
         })
       }
     })
