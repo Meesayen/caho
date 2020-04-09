@@ -53,6 +53,7 @@ const clsVideoId = css`
   width: 100%;
   height: calc(100vw / 8 * 3 / 4);
   background: #000d;
+  overflow: hidden;
 
   div,
   video {
@@ -63,7 +64,7 @@ const clsVideoId = css`
 
 const PlayerVideo: React.FC<{ stream: any; isMe: boolean }> = ({
   stream,
-  isMe
+  isMe,
 }) => {
   const addStream = useCallback(
     video => {
@@ -86,6 +87,7 @@ const PlayerVideo: React.FC<{ stream: any; isMe: boolean }> = ({
 const readyBtnCls = css`
   padding: 8px 16px;
   pointer-events: none;
+  flex: 1;
 `
 const readyCls = css`
   ${readyBtnCls}
@@ -135,6 +137,10 @@ const cls = css`
     & + & {
       box-shadow: 0 1px 3px #0001, -2px 0 0 #ddd3, -1px 0 0 #9994;
     }
+
+    &.-me {
+      background: #59aeb766;
+    }
   }
 `
 
@@ -151,7 +157,10 @@ const StatusBar: React.FC<Props> = ({ game, onReady }) => {
       {game.players.map(p => {
         const isMe = p.id === socket.id
         return (
-          <div className="block u--flx -col" key={p.id}>
+          <div
+            className={cx('block u--flx -col', isMe ? '-me' : '')}
+            key={p.id}
+          >
             <PlayerIndicator player={p} />
             <PlayerVideo stream={streams[p.id]} isMe={isMe} />
             {game.status !== 'started' ? (
