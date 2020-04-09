@@ -65,6 +65,14 @@ const globalStyles = css`
   .deck {
     box-shadow: 3px 3px #36404c, 4px 4px 6px #000a;
   }
+
+  .card.-small {
+    width: 80px;
+    height: 128px;
+    font-size: 10px;
+    border-radius: 10px;
+    padding: 12px 10px;
+  }
 `
 
 render(
