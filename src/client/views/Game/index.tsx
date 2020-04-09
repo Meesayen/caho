@@ -32,6 +32,10 @@ const Game: React.FC<Props> = ({ gameId }) => {
       return
     }
 
+    if (err === 403) {
+      setLocation('/sorry')
+    }
+
     const puid = sessionStorage.getItem('player:uid')
     joinGame({ gameId, puid })
 
@@ -61,7 +65,8 @@ const Game: React.FC<Props> = ({ gameId }) => {
 
   const isStarting = gameStatus.status === 'starting'
 
-  console.log(gameStatus)
+  console.log('game:', gameStatus)
+
   return (
     <GameContext.Provider value={{ gameId }}>
       <PlayersStatus game={gameStatus} />
