@@ -153,7 +153,7 @@ function updateGame(gameId, props) {
 }
 
 function updatePlayer(id, gameId, props) {
-  console.log('update player', id, props)
+  // console.log('update player', id, props)
   const game = GAMES[gameId]
   const sockets = GAME_SOCKETS[gameId]
   if (!game) return
@@ -165,10 +165,10 @@ function updatePlayer(id, gameId, props) {
     return p
   })
   const player = game.players.find(p => p.id === id)
-  console.log(player)
   sockets[id].emit('player:status', {
     ...player,
     cards: PLAYERS[player.id].cards,
+    answers: player.answers.map(c => ({ ...ANSWER_CARDS[c.id], id: c.id })),
   })
   broadcastGameStatus(game)
 }
@@ -223,11 +223,15 @@ function dealCardsToPlayers(gameId) {
         return { ...ANSWER_CARDS[i], id: i }
       })
       PLAYERS[p.id].cards.answers = answers.concat(newCards)
-      gameSockets[p.id].emit('player:status', {
-        ...p,
+      // gameSockets[p.id].emit('player:status', {
+      //   ...p,
+      //   phase: 'cards-picked',
+      // })
+      updatePlayer(p.id, gameId, {
+        phase: 'cards-picked',
         cards: PLAYERS[p.id].cards,
       })
-    }, 25 * i)
+    }, 50 * i)
   })
 }
 
@@ -235,32 +239,54 @@ function chooseJudge(gameId) {
   const game = GAMES[gameId]
 
   if (!game) return
-  const playerIds = game.players.map(p => p.id)
-  const judgeId =
-    playerIds.length > 2
-      ? shuffle(playerIds)[0]
-      : playerIds[Math.floor(Math.random() * 2)]
-  game.players = game.players.map(p => {
-    if (p.id !== judgeId) return p
-    return {
-      ...p,
-      role: 'judge',
-    }
-  })
+
+  const judgeIdx = game.players.findIndex(p => p.role === 'judge')
+  if (judgeIdx !== -1) {
+    // game already in progress - cycling players
+    game.players[judgeIdx].role = 'player'
+    const newJudgeIdx = judgeIdx + 1 < game.players.length ? judgeIdx + 1 : 0
+    game.players[newJudgeIdx].role = 'judge'
+  } else {
+    const playerIds = game.players.map(p => p.id)
+    const judgeId =
+      playerIds.length > 2
+        ? shuffle(playerIds)[0]
+        : playerIds[Math.floor(Math.random() * 2)]
+    game.players = game.players.map(p => {
+      if (p.id !== judgeId) return p
+      return {
+        ...p,
+        role: 'judge',
+      }
+    })
+  }
+
   broadcastGameStatus(game)
 }
 
+function startRound(game, ongoingGame) {
+  if (game && (game.status === 'starting' || ongoingGame)) {
+    chooseJudge(game.id)
+    updateGame(game.id, {
+      status: 'started',
+      players: game.players.map(p => {
+        return { ...p, phase: 'cards-picking' }
+      }),
+    })
+    dealCardsToPlayers(game.id)
+  }
+}
 export function init(server) {
   io(server).on('connection', socket => {
     // game
     socket.on('game:create-new', () => {
-      console.log('create game')
+      // console.log('create game')
       let gameId = uid(8)
       createNewGame(gameId, socket)
     })
 
     socket.on('game:ask-status', ({ gameId }) => {
-      console.log('ask-status')
+      // console.log('ask-status')
       if (GAMES[gameId]) socket.emit('game:status', GAMES[gameId])
       else socket.emit('game:status', { error: 404 })
     })
@@ -275,23 +301,14 @@ export function init(server) {
     })
 
     socket.on('game:start', ({ gameId }) => {
-      console.log('start game')
+      // console.log('start game')
       const game = GAMES[gameId]
-      if (game && game.status === 'starting') {
-        chooseJudge(gameId)
-        updateGame(gameId, {
-          status: 'started',
-          players: game.players.map(p => {
-            return { ...p, phase: 'cards-picking' }
-          }),
-        })
-        dealCardsToPlayers(gameId)
-      }
+      startRound(game)
     })
 
     // player actions - session
     socket.on('game:join-game', ({ gameId, puid }) => {
-      console.log('join game', socket.id)
+      // console.log('join game', socket.id)
       const game = GAMES[gameId]
 
       // no game found - 404
@@ -341,8 +358,13 @@ export function init(server) {
       const player = players.find(p => {
         return p.answers.find(c => c.id === cardId)
       })
+      if (!player) {
+        console.log('what the fuck')
+        console.log(GAMES[gameId])
+        console.log('============')
+      }
       const answers = player.answers.map(c => {
-        if (c.id === cardId) return ANSWER_CARDS[cardId]
+        if (c.id === cardId) return { id: cardId, ...ANSWER_CARDS[cardId] }
         return c
       })
       updatePlayer(player.id, gameId, {
@@ -350,7 +372,6 @@ export function init(server) {
       })
     })
     socket.on('game:all-cards-revealed', ({ gameId }) => {
-      console.log('yes')
       const players = GAMES[gameId].players
       const judge = players.find(p => {
         return p.role === 'judge'
@@ -364,6 +385,40 @@ export function init(server) {
       })
     })
 
+    socket.on('game:select-winner', ({ gameId, cardId }) => {
+      const game = GAMES[gameId]
+      if (!game) return
+      if (game.phase !== 'select-winner') return
+      const winner = game.players.find(p =>
+        p.answers.find(c => c.id === cardId)
+      )
+      updatePlayer(winner.id, gameId, {
+        winner: true,
+      })
+      updateGame(gameId, {
+        phase: 'points',
+      })
+    })
+
+    socket.on('game:new-round', ({ gameId }) => {
+      const game = GAMES[gameId]
+      for (const player of game.players) {
+        updatePlayer(player.id, gameId, {
+          winner: false,
+          answers: [],
+        })
+      }
+
+      updateGame(gameId, {
+        phase: 'deal',
+        question: null,
+      })
+
+      setTimeout(() => {
+        startRound(game, true)
+      }, 1000)
+    })
+
     // player actions - game
     socket.on('player:is-ready', ({ gameId }) => {
       updatePlayer(socket.id, gameId, {
@@ -372,10 +427,7 @@ export function init(server) {
     })
 
     socket.on('player:cards-picked', ({ gameId }) => {
-      console.log('player:cards-picked')
-      updatePlayer(socket.id, gameId, {
-        phase: 'cards-picked',
-      })
+      // console.log('player:cards-picked', GAMES[gameId])
 
       // if all players have picked their cards
       if (GAMES[gameId].players.every(p => p.phase === 'cards-picked')) {
@@ -385,7 +437,6 @@ export function init(server) {
         })
         for (const player of GAMES[gameId].players) {
           if (player.role === 'judge') {
-            console.log('question-picking')
             updatePlayer(player.id, gameId, {
               phase: 'question-picking',
             })

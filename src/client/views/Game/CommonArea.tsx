@@ -1,16 +1,18 @@
 import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
-import { Game } from '~types'
+import { Game, Player } from '~types'
 import { useSocketContext, useEmitEvent } from '~utils/socket'
 import { blankify } from '~utils/misc'
+import { Card } from '~components/Card'
 
 interface Props {
   game: Game
+  player: Player
 }
 
 const cls = css`
   flex: 1;
-  .deck.-question {
+  .Card.-question {
     cursor: pointer;
     &:not(.-enabled) {
       pointer-events: none;
@@ -25,7 +27,7 @@ const cls = css`
   }
 `
 
-export const CommonArea: React.FC<Props> = ({ game }) => {
+export const CommonArea: React.FC<Props> = ({ player, game }) => {
   const { players } = game
   const { socket } = useSocketContext()
   const sendPickQuestion = useEmitEvent('player:pick-question')
@@ -35,26 +37,32 @@ export const CommonArea: React.FC<Props> = ({ game }) => {
   }, [])
 
   const judge = players.find(p => p.role === 'judge')
-  if (!judge) return null
+
+  const deckEnabled =
+    judge?.id === socket.id && judge.phase === 'question-picking'
 
   return (
     <div className={cx(cls, 'u--flx', '-cc')}>
       <div className="question-block u--flx -vc -sa">
-        {judge.id === socket.id && judge.phase === 'question-picking' ? (
-          <div
-            className="deck -question -enabled"
-            onClick={drawQuestionCard}
-          ></div>
-        ) : (
-          <div className="deck -question"></div>
-        )}
+        <Card
+          className={deckEnabled ? '-enabled' : ''}
+          type="question"
+          deck={true}
+          onClick={drawQuestionCard}
+        />
         {game.question ? (
-          <div className="card">{blankify(game.question.text)}</div>
+          <Card type="question" text={game.question.text} />
         ) : (
           <div className="card u--ghost"></div>
         )}
       </div>
-      <div className="answers-block"></div>
+      <div className="answers-block">
+        {player.role === 'player'
+          ? player.answers.map(card => (
+              <Card id={card.id} text={card.text} key={`card-${card.id}`} />
+            ))
+          : null}
+      </div>
     </div>
   )
 }

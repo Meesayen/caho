@@ -9,6 +9,10 @@ import { PhaseAnnouncer } from '~components/PhaseAnnouncer'
 
 const cls = css`
   flex: 1;
+
+  & > div {
+    z-index: 1;
+  }
 `
 
 interface Props {
@@ -18,27 +22,33 @@ interface Props {
 const Table: React.FC<Props> = ({ game }) => {
   const gameId = game.id
   const [player, err] = useSocketData<MePlayer>('player:status')
-  const sendDealDone = useEmitEvent('player:cards-picked')
-  if (game.status !== 'started' || !player) return null
+  const sendCardsPicked = useEmitEvent('player:cards-picked')
 
-  if (game.phase === 'deal') {
-    if (player?.phase === 'cards-picking') {
-      sendDealDone({ gameId })
+  useEffect(() => {
+    if (game.phase === 'deal') {
+      if (player?.phase === 'cards-picked') {
+        sendCardsPicked({ gameId })
+      }
     }
-  }
-  if (game.phase === 'pick-question') {
-  }
+  }, [game.phase, player, gameId])
+
+  if (game.status !== 'started' || !player) return null
 
   console.log('player:', player)
 
   const isJudge = player.role === 'judge'
+  const isWinner = player.winner === true
 
   return (
     <div className={cx(cls, 'u--flx -col')}>
       <PlayersAnswers game={game} isJudge={isJudge} />
-      <CommonArea game={game} />
+      <CommonArea player={player} game={game} />
       <PlayerCards player={player} game={game} />
-      <PhaseAnnouncer phase={game.phase} isJudge={isJudge} />
+      <PhaseAnnouncer
+        phase={game.phase}
+        isJudge={isJudge}
+        isWinner={isWinner}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { css, cx } from 'emotion'
 import { useSocketContext, useEmitEvent } from '~utils/socket'
 import { Game, Player } from '~types'
@@ -40,7 +40,7 @@ const PlayerIndicator: React.FC<{ player: Player }> = ({ player }) => {
     <div className={cx(clsPlayerId, 'u--flx -sb -cc')}>
       <div className="info">
         <div className="name">{player.name}</div>
-        <div className="role">{player.role}</div>
+        <div className="role">{player.winner ? 'winner' : player.role}</div>
       </div>
       <div
         className={cx('status', player.status === 'offline' ? '-off' : '-on')}
@@ -87,12 +87,13 @@ const PlayerVideo: React.FC<{ stream: any; isMe: boolean }> = ({
 const readyBtnCls = css`
   padding: 8px 16px;
   pointer-events: none;
+  background: whitesmoke;
   flex: 1;
 `
 const readyCls = css`
   ${readyBtnCls}
-  background: #080a;
-  color: #fffe;
+  background: #3dde6f;
+  color: #fffc;
 `
 const notReadyCls = css`
   ${readyBtnCls}
@@ -104,7 +105,7 @@ const notReadyCls = css`
   }
 
   &:hover {
-    background: #0802;
+    background: #a6ffda;
     cursor: pointer;
   }
 `
@@ -129,17 +130,23 @@ const ReadyButton: React.FC<{
 const cls = css`
   width: 100vw;
   border-bottom: 1px solid #0001;
+  background: #2f2f2f;
 
   .block {
     width: calc(100vw / 8);
     box-shadow: 0 1px 3px #0001;
+    background: whitesmoke;
 
     & + & {
       box-shadow: 0 1px 3px #0001, -2px 0 0 #ddd3, -1px 0 0 #9994;
     }
 
     &.-me {
-      background: #59aeb766;
+      background: #59aeb7;
+    }
+
+    &.-winner {
+      background: gold;
     }
   }
 `
@@ -152,13 +159,24 @@ const StatusBar: React.FC<Props> = ({ game, onReady }) => {
   const { socket } = useSocketContext()
   const streams = useStreams()
 
+  const players = useMemo(() => {
+    const players = [...game.players]
+    const meIdx = players.findIndex(p => p.id === socket.id)
+    ;[players[0], players[meIdx]] = [players[meIdx], players[0]]
+    return players
+  }, [game.players])
+
   return (
     <div className={cx(cls, 'u--flx')}>
-      {game.players.map(p => {
+      {players.map(p => {
         const isMe = p.id === socket.id
         return (
           <div
-            className={cx('block u--flx -col', isMe ? '-me' : '')}
+            className={cx(
+              'block u--flx -col',
+              isMe ? '-me' : '',
+              p.winner ? '-winner' : ''
+            )}
             key={p.id}
           >
             <PlayerIndicator player={p} />

@@ -1,6 +1,7 @@
 export interface AnswerCard {
   text?: string
   id: number
+  winner?: boolean
 }
 export interface QuestionCard {
   text: string
@@ -23,6 +24,7 @@ export interface Player {
   avatar: string
   gameId: string
   role: 'judge' | 'player'
+  winner?: boolean
   answers: AnswerCard[]
 }
 

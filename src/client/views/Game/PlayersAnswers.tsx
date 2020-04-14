@@ -3,6 +3,7 @@ import { css, cx } from 'emotion'
 import { Game, AnswerCard } from '~types'
 import { useSocketContext, useEmitEvent } from '~utils/socket'
 import { shuffle } from '~utils/misc'
+import { Card } from '~components/Card'
 
 interface Props {
   game: Game
@@ -16,11 +17,17 @@ const cls = css`
     box-shadow: 0 1px 3px #0001;
   }
 
-  .card.-revealed {
-    pointer-events: none;
+  &.-read-answers {
+    .Card.-revealed {
+      pointer-events: none;
+    }
   }
-  .card.-concealed {
+  .Card {
     cursor: pointer;
+
+    &.-winner {
+      background: gold;
+    }
   }
 
   .btn {
@@ -40,11 +47,17 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
   const sendCardReveal = useEmitEvent('game:card-reveal')
   const sendAllCardsRevealed = useEmitEvent('game:all-cards-revealed')
   const sendSelectWinner = useEmitEvent('game:select-winner')
+  const sendNewRound = useEmitEvent('game:new-round')
   const [doneButtonActivated, activateDoneButton] = useState(false)
+  const [newRoundButtonActivated, activateNewRoundButton] = useState(false)
 
   const playerAnswers = useMemo(() => {
     return players.flatMap(p => {
-      return p.role === 'judge' ? [] : [p.answers]
+      return p.role === 'judge'
+        ? []
+        : p.winner
+        ? [p.answers.map(c => ({ ...c, winner: true }))]
+        : [p.answers]
     })
   }, [players])
 
@@ -72,6 +85,12 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
     sendAllCardsRevealed({ gameId: game.id })
   }, [])
 
+  const newRoundClicked = useCallback(() => {
+    activateNewRoundButton(false)
+
+    sendNewRound({ gameId: game.id })
+  }, [])
+
   useEffect(() => {
     if (
       game.phase === 'read-answers' &&
@@ -83,12 +102,25 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
     }
   }, [game.phase, answers])
 
+  useEffect(() => {
+    if (game.phase === 'points') {
+      activateNewRoundButton(true)
+    }
+  }, [game.phase])
+
+  const phaseCls =
+    game.phase === 'read-answers' ? '-read-answers' : '-select-winner'
   return (
-    <div className={cx(cls, 'u--flx')}>
+    <div className={cx(cls, 'u--flx', phaseCls)}>
       <div className="block u--flx -col -cc" key={`block-btn`}>
         {doneButtonActivated ? (
           <div className="btn" onClick={doneClicked}>
             Done!
+          </div>
+        ) : null}
+        {newRoundButtonActivated ? (
+          <div className="btn" onClick={newRoundClicked}>
+            New Round!
           </div>
         ) : null}
       </div>
@@ -96,16 +128,17 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
         return (
           <div className="block u--flx -col -cc" key={`block-${i}`}>
             {cards.map(card => (
-              <div
+              <Card
                 className={cx(
-                  'card -small',
-                  card.text ? '-revealed' : '-concealed'
+                  card.text ? '-revealed' : '-concealed',
+                  card.winner ? '-winner' : ''
                 )}
+                id={card.id}
+                text={card.text}
+                size={'small'}
                 key={`card-${card.id}`}
-                onClick={() => onCardClick(card)}
-              >
-                {card.text}
-              </div>
+                onClick={onCardClick}
+              />
             ))}
           </div>
         )

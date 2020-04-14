@@ -34,7 +34,7 @@ export function useStreams() {
       try {
         myStream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: true,
+          audio: false,
         })
         setStreams(streams => {
           return { ...streams, [socket.id]: myStream! }

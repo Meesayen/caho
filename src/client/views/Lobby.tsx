@@ -17,6 +17,7 @@ const cls = css`
     border-radius: 3px;
     box-shadow: 0 1px 3px #0002;
     text-align: center;
+    background: #fff7;
 
     h1 {
       margin-bottom: 0;
@@ -59,7 +60,7 @@ const Lobby: React.FC = () => {
   if (err) return null
   if (!data) return null
 
-  const linkUrl = `${window.location.origin}/${data.id}`
+  const linkUrl = `${window.location.origin}/game/${data.id}`
   return (
     <div className={cls}>
       <div className="panel u--flx -col -cc -sb">

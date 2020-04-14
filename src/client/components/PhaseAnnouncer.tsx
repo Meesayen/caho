@@ -6,6 +6,7 @@ import { Game } from '~types'
 interface Props {
   phase: Game['phase']
   isJudge: boolean
+  isWinner: boolean
 }
 
 const cls = css`
@@ -57,24 +58,38 @@ const contentAnimations: Variants = {
   },
 }
 
-export const PhaseAnnouncer: React.FC<Props> = ({ phase, isJudge }) => {
+export const PhaseAnnouncer: React.FC<Props> = ({
+  phase,
+  isJudge,
+  isWinner,
+}) => {
   const [visible, setVisible] = useState(false)
   const [exiting, setExiting] = useState(false)
   const [title, setTitle] = useState('')
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
+    let timer: any
     if (visible) {
-      setTimeout(() => setExiting(true), 2500)
+      timer = setTimeout(() => setExiting(true), 2500)
+    }
+
+    return () => {
+      timer && clearTimeout(timer)
     }
   }, [visible])
 
   useEffect(() => {
+    let timer: any
     if (exiting) {
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setVisible(false)
         setExiting(false)
       }, 500)
+    }
+
+    return () => {
+      timer && clearTimeout(timer)
     }
   }, [exiting])
 
@@ -109,6 +124,20 @@ export const PhaseAnnouncer: React.FC<Props> = ({ phase, isJudge }) => {
       setTitle('Winner Selection')
       setMsg(
         isJudge ? 'Please select the answer you liked the most' : 'Good Luck!'
+      )
+      setVisible(true)
+    }
+
+    if (phase === 'points') {
+      setTitle(
+        isJudge ? 'Great Choice!' : isWinner ? 'Congratulations!' : 'Too bad!'
+      )
+      setMsg(
+        isJudge
+          ? ''
+          : isWinner
+          ? 'You won this round. You get 1 point.'
+          : 'Better luck next time.'
       )
       setVisible(true)
     }

@@ -2,6 +2,7 @@ import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
 import { Game, MePlayer, AnswerCard } from '~types'
 import { useEmitEvent } from '~utils/socket'
+import { Card } from '~components/Card'
 
 interface Props {
   game: Game
@@ -15,7 +16,7 @@ const cls = css`
     pointer-events: none;
   }
 
-  &.-player .card {
+  &.-player .Card {
     cursor: pointer;
   }
 `
@@ -41,13 +42,12 @@ export const PlayerCards: React.FC<Props> = ({ game, player }) => {
       )}
     >
       {player.cards.answers.map(c => (
-        <div
-          className="card"
+        <Card
+          id={c.id}
+          text={c.text}
           key={`card-${c.id}`}
           onClick={() => chooseCard(c)}
-        >
-          {c.text}
-        </div>
+        />
       ))}
     </div>
   )
