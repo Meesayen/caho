@@ -3,7 +3,7 @@ import { css, cx } from 'emotion'
 import { motion } from 'framer-motion'
 import marked from 'marked'
 import { AnswerCard, QuestionCard } from '~/types'
-import { blankify } from '~/utils/misc'
+import { blankify, countBlanks } from '~/utils/misc'
 
 const cls = css`
   width: 160px;
@@ -44,8 +44,47 @@ const cls = css`
     padding: 2px 8px;
   }
 
+  &.-pick-2,
+  &.-pick-3 {
+    position: relative;
+    &::before,
+    &::after {
+      position: absolute;
+      display: block;
+    }
+    &::before {
+      content: 'Pick';
+      color: white;
+      right: 44px;
+      bottom: 14px;
+      font-size: 17px;
+    }
+    &::after {
+      bottom: 10px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      color: #242627;
+      border-radius: 50%;
+      padding: 5px;
+      text-align: center;
+      font-size: 20px;
+    }
+  }
+  &.-pick-2 {
+    &::after {
+      content: '2';
+    }
+  }
+  &.-pick-3 {
+    &::after {
+      content: '3';
+    }
+  }
+
   &:not(.-deck):hover {
-    box-shadow: 0 0 0 2px goldenrod;
+    box-shadow: 1px 1px 4px #0002, 0 0 0 2px goldenrod;
   }
 `
 
@@ -68,11 +107,14 @@ export const Card: React.FC<Props> = ({
   className,
   onClick,
 }) => {
+  const pickNum = text ? countBlanks({ text }) : 0
+
   const classes = [
     className,
     type === 'question' ? '-question' : null,
     size === 'small' ? '-small' : null,
     deck ? '-deck' : null,
+    pickNum > 1 ? `-pick-${pickNum}` : null,
   ].filter(Boolean)
 
   const emitClick = useCallback(() => {
@@ -83,6 +125,7 @@ export const Card: React.FC<Props> = ({
   }, [onClick])
 
   const html = text ? marked(blankify(text)) : ''
+
   return (
     <motion.div className={cx(cls, 'Card', ...classes)} onClick={emitClick}>
       <div dangerouslySetInnerHTML={{ __html: html }}></div>

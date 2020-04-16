@@ -15,6 +15,7 @@ const cls = css`
     border-radius: 3px;
     box-shadow: 0 1px 3px #0002;
     text-align: center;
+    background: #fff7;
 
     h1 {
       margin-bottom: 0;

@@ -1,5 +1,11 @@
+import { QuestionCard } from '~/types'
+
 export function blankify(str: string) {
   return str.replace(/BLANK/gm, '\\_\\_\\_\\_\\_\\_')
+}
+
+export function countBlanks(card: QuestionCard) {
+  return (card.text.match(/(BLANK)/gm) || []).length
 }
 
 // modifies in places

@@ -15,20 +15,22 @@ const cls = css`
   .block {
     width: calc(100vw / 8);
     box-shadow: 0 1px 3px #0001;
+    flex-direction: row-reverse;
   }
 
   &.-read-answers {
     .Card.-revealed {
-      box-shadow: none;
       cursor: initial;
 
       &:hover {
-        transform: scale(2);
+        box-shadow: 1px 1px 4px #0002;
+        transform: scale(1.8);
       }
     }
   }
   .Card {
     cursor: pointer;
+    margin-left: -24px;
 
     &.-winner {
       background: gold;
@@ -131,7 +133,7 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
       </div>
       {answers.map((cards, i) => {
         return (
-          <div className="block u--flx -col -cc" key={`block-${i}`}>
+          <div className="block u--flx -cc" key={`block-${i}`}>
             {cards.map(card => (
               <Card
                 className={cx(

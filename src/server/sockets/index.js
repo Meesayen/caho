@@ -458,7 +458,7 @@ export function init(server) {
       }
     })
 
-    socket.on('player:pick-answer', ({ gameId, cardId }) => {
+    socket.on('player:pick-answers', ({ gameId, cards }) => {
       const game = GAMES[gameId]
       if (game.phase !== 'pick-answers') return
 
@@ -472,10 +472,11 @@ export function init(server) {
       // TODO: allow multiple answers
       PLAYERS[player.id].cards.answers = PLAYERS[
         player.id
-      ].cards.answers.filter(c => c.id !== cardId)
+      ].cards.answers.filter(c => !cards.includes(c.id))
+
       updatePlayer(player.id, gameId, {
         phase: 'answer-picked',
-        answers: [{ id: cardId }],
+        answers: cards.map(id => ({ id })),
       })
 
       if (

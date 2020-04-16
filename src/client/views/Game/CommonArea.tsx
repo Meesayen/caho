@@ -2,7 +2,6 @@ import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
 import { Game, Player } from '~/types'
 import { useSocketContext, useEmitEvent } from '~/utils/socket'
-import { blankify } from '~/utils/misc'
 import { Card } from '~/components/Card'
 
 interface Props {
@@ -56,7 +55,7 @@ export const CommonArea: React.FC<Props> = ({ player, game }) => {
           <div className="card u--ghost"></div>
         )}
       </div>
-      <div className="answers-block">
+      <div className="answers-block u--flx -vc -sa">
         {player.role === 'player'
           ? player.answers.map(card => (
               <Card id={card.id} text={card.text} key={`card-${card.id}`} />
