@@ -6,7 +6,7 @@
   "scripts": {
     "build:client": "parcel build ./src/client/index.html",
     "watch:client": "parcel ./src/client/index.html",
-    "watch:server": "nodemon --experimental-modules ./src/server/index.js",
+    "watch:server": "nodemon --experimental-modules --experimental-json-modules ./src/server/index.js",
     "dev": "run-p watch:client watch:server",
     "build": "npm run build:client",
     "start": "node --experimental-modules ./src/server/index.js",
@@ -19,6 +19,7 @@
     "@types/simple-peer": "^9.6.0",
     "emotion": "^10.0.27",
     "framer-motion": "^1.10.3",
+    "marked": "^0.8.2",
     "polka": "^0.5.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -29,6 +30,7 @@
     "wouter": "^2.4.0"
   },
   "devDependencies": {
+    "@types/marked": "^0.7.4",
     "@types/react": "^16.9.26",
     "@types/react-dom": "^16.9.5",
     "@types/socket.io": "^2.1.4",

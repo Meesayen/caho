@@ -19,7 +19,12 @@ const cls = css`
 
   &.-read-answers {
     .Card.-revealed {
-      pointer-events: none;
+      box-shadow: none;
+      cursor: initial;
+
+      &:hover {
+        transform: scale(2);
+      }
     }
   }
   .Card {
@@ -71,7 +76,7 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
 
   const onCardClick = useCallback(
     card => {
-      if (game.phase === 'read-answers') {
+      if (game.phase === 'read-answers' && !card.text) {
         sendCardReveal({ gameId: game.id, cardId: card.id })
       } else if (game.phase === 'select-winner') {
         sendSelectWinner({ gameId: game.id, cardId: card.id })

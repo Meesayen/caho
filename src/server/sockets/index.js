@@ -1,34 +1,8 @@
 import io from 'socket.io'
 import uid from 'uid'
 
-const ANSWER_CARDS = [
-  {
-    text: 'Answer 1',
-  },
-  {
-    text: 'Answer 2',
-  },
-  {
-    text: 'Answer 3',
-  },
-  {
-    text: 'Answer 4',
-  },
-]
-const QUESTION_CARDS = [
-  {
-    text: 'Question BLANK 1',
-  },
-  {
-    text: 'Question 2 BLANK',
-  },
-  {
-    text: 'BLANK: Question 3 BLANK',
-  },
-  {
-    text: 'BLANK: Question 4',
-  },
-]
+import ANSWER_CARDS from '../resources/answer-cards.json'
+import QUESTION_CARDS from '../resources/question-cards.json'
 
 const GAMES = {}
 const PLAYERS = {}
@@ -139,6 +113,7 @@ function createNewGame(id, socket) {
     questions: createShuffledDeck(QUESTION_CARDS),
     answers: createShuffledDeck(ANSWER_CARDS),
     question: null,
+    lang: 'eng',
   }
   socket.emit('game:status', GAMES[id])
 }
@@ -168,7 +143,10 @@ function updatePlayer(id, gameId, props) {
   sockets[id].emit('player:status', {
     ...player,
     cards: PLAYERS[player.id].cards,
-    answers: player.answers.map(c => ({ ...ANSWER_CARDS[c.id], id: c.id })),
+    answers: player.answers.map(c => {
+      const card = ANSWER_CARDS[c.id]
+      return { text: card[game.lang], id: c.id, type: card.type }
+    }),
   })
   broadcastGameStatus(game)
 }
@@ -217,10 +195,11 @@ function dealCardsToPlayers(gameId) {
     // some messaging mess up
     setTimeout(() => {
       const answers = PLAYERS[p.id].cards.answers
-      const toPick = 1 - answers.length
-      // const toPick = 10 - answers.length
+      // const toPick = 1 - answers.length
+      const toPick = 10 - answers.length
       const newCards = game.answers.splice(0, toPick).map(i => {
-        return { ...ANSWER_CARDS[i], id: i }
+        const card = ANSWER_CARDS[i]
+        return { text: card[game.lang], id: i, type: card.type }
       })
       PLAYERS[p.id].cards.answers = answers.concat(newCards)
       // gameSockets[p.id].emit('player:status', {
@@ -354,17 +333,21 @@ export function init(server) {
       removePlayer(socket, gameId)
     })
     socket.on('game:card-reveal', ({ gameId, cardId }) => {
-      const players = GAMES[gameId].players
+      const game = GAMES[gameId]
+      const players = game.players
       const player = players.find(p => {
         return p.answers.find(c => c.id === cardId)
       })
       if (!player) {
         console.log('what the fuck')
-        console.log(GAMES[gameId])
+        console.log(game)
         console.log('============')
       }
       const answers = player.answers.map(c => {
-        if (c.id === cardId) return { id: cardId, ...ANSWER_CARDS[cardId] }
+        if (c.id === cardId) {
+          const card = ANSWER_CARDS[cardId]
+          return { text: card[game.lang], id: cardId, type: card.type }
+        }
         return c
       })
       updatePlayer(player.id, gameId, {
@@ -452,7 +435,12 @@ export function init(server) {
     socket.on('player:pick-question', ({ gameId }) => {
       const game = GAMES[gameId]
       const questionId = game.questions.pop()
-      game.question = QUESTION_CARDS[questionId]
+      const questionCard = QUESTION_CARDS[questionId]
+      game.question = {
+        text: questionCard[game.lang],
+        id: questionId,
+        type: questionCard.type,
+      }
       game.phase = 'pick-answers'
       updateGame(gameId, {
         phase: 'pick-answers',

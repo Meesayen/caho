@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
 import { motion } from 'framer-motion'
+import marked from 'marked'
 import { AnswerCard, QuestionCard } from '~/types'
 import { blankify } from '~/utils/misc'
 
@@ -11,9 +12,11 @@ const cls = css`
   border: 1px solid #0003;
   box-shadow: 1px 1px 4px #0002;
   background: white;
-  padding: 24px 16px;
+  padding: 8px 16px;
   font-family: helvetica;
   letter-spacing: 0.3px;
+  line-height: 20px;
+  font-size: 15px;
   transition: box-shadow 150ms ease-in-out;
 
   &.-question {
@@ -35,9 +38,10 @@ const cls = css`
   &.-small {
     width: 80px;
     height: 128px;
-    font-size: 10px;
+    line-height: 10px;
+    font-size: 7px;
     border-radius: 10px;
-    padding: 12px 10px;
+    padding: 2px 8px;
   }
 
   &:not(.-deck):hover {
@@ -78,9 +82,10 @@ export const Card: React.FC<Props> = ({
     }
   }, [onClick])
 
+  const html = text ? marked(blankify(text)) : ''
   return (
     <motion.div className={cx(cls, 'Card', ...classes)} onClick={emitClick}>
-      {text ? blankify(text) : ''}
+      <div dangerouslySetInnerHTML={{ __html: html }}></div>
     </motion.div>
   )
 }

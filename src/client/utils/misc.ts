@@ -1,5 +1,5 @@
 export function blankify(str: string) {
-  return str.replace(/BLANK/gm, '______')
+  return str.replace(/BLANK/gm, '\\_\\_\\_\\_\\_\\_')
 }
 
 // modifies in places

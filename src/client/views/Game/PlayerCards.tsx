@@ -11,6 +11,8 @@ interface Props {
 
 const cls = css`
   flex: 1;
+  flex-direction: row-reverse;
+
   &:not(.-enabled),
   &.-judge {
     pointer-events: none;
@@ -18,6 +20,15 @@ const cls = css`
 
   &.-player .Card {
     cursor: pointer;
+  }
+
+  .Card {
+    margin-left: -48px;
+
+    &:hover {
+      z-index: 2;
+      transform: scale(1.2);
+    }
   }
 `
 
