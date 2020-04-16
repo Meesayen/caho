@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import SimplePeer from 'simple-peer'
-import { useEmitEvent, useSocketContext } from '~utils/socket'
+import { useEmitEvent, useSocketContext } from '~/utils/socket'
 
 interface AckSynResponse {
   peerId: string

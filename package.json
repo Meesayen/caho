@@ -2,7 +2,6 @@
   "name": "cah-online",
   "version": "1.0.0",
   "description": "Cards Against Humanity Online",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "build:client": "parcel build ./src/client/index.html",
@@ -43,10 +42,8 @@
     "ignore": [
       "src/client/*",
       "dist/*",
-      ".cache"
+      ".cache/*",
+      ".parcel-cache/*"
     ]
-  },
-  "browserslist": [
-    "last 1 Chrome versions"
-  ]
+  }
 }

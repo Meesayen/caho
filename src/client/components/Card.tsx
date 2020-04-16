@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
 import { motion } from 'framer-motion'
-import { AnswerCard, QuestionCard } from '~types'
-import { blankify } from '~utils/misc'
+import { AnswerCard, QuestionCard } from '~/types'
+import { blankify } from '~/utils/misc'
 
 const cls = css`
   width: 160px;

@@ -1,11 +1,11 @@
 import React, { useEffect, useCallback } from 'react'
 import { css, cx } from 'emotion'
-import { useEmitEvent, useSocketData } from '~utils/socket'
-import { Game, MePlayer } from '~types'
-import { PlayersAnswers } from '~views/Game/PlayersAnswers'
-import { CommonArea } from '~views/Game/CommonArea'
-import { PlayerCards } from '~views/Game/PlayerCards'
-import { PhaseAnnouncer } from '~components/PhaseAnnouncer'
+import { useEmitEvent, useSocketData } from '~/utils/socket'
+import { Game, MePlayer } from '~/types'
+import { PlayersAnswers } from '~/views/Game/PlayersAnswers'
+import { CommonArea } from '~/views/Game/CommonArea'
+import { PlayerCards } from '~/views/Game/PlayerCards'
+import { PhaseAnnouncer } from '~/components/PhaseAnnouncer'
 
 const cls = css`
   flex: 1;

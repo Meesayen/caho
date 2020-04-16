@@ -1,8 +1,8 @@
 import React, { useEffect, useCallback } from 'react'
 import { css } from 'emotion'
-import StatusBar from '~components/StatusBar'
-import { useEmitEvent } from '~utils/socket'
-import { Game } from '~types'
+import StatusBar from '~/components/StatusBar'
+import { useEmitEvent } from '~/utils/socket'
+import { Game } from '~/types'
 
 const cls = css``
 

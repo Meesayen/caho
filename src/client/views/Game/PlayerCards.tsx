@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react'
 import { css, cx } from 'emotion'
-import { Game, MePlayer, AnswerCard } from '~types'
-import { useEmitEvent } from '~utils/socket'
-import { Card } from '~components/Card'
+import { Game, MePlayer, AnswerCard } from '~/types'
+import { useEmitEvent } from '~/utils/socket'
+import { Card } from '~/components/Card'
 
 interface Props {
   game: Game

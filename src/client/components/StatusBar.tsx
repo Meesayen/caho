@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { css, cx } from 'emotion'
-import { useSocketContext, useEmitEvent } from '~utils/socket'
-import { Game, Player } from '~types'
-import { useStreams } from '~utils/streams'
+import { useSocketContext, useEmitEvent } from '~/utils/socket'
+import { Game, Player } from '~/types'
+import { useStreams } from '~/utils/streams'
 
 const clsPlayerId = css`
   width: 100%;

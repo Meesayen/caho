@@ -2,12 +2,12 @@ import React, { lazy, Suspense } from 'react'
 import io from 'socket.io-client'
 import { Route } from 'wouter'
 import { css, cx } from 'emotion'
-import { SocketContext } from '~utils/socket'
-import { noiseImage } from '~utils/misc'
+import { SocketContext } from '~/utils/socket'
+import { noiseImage } from '~/utils/misc'
 
-const Lobby = lazy(() => import('~views/Lobby'))
-const Sorry = lazy(() => import('~views/Sorry'))
-const Game = lazy(() => import('~views/Game'))
+const Lobby = lazy(() => import('~/views/Lobby'))
+const Sorry = lazy(() => import('~/views/Sorry'))
+const Game = lazy(() => import('~/views/Game'))
 
 const cls = css`
   color: #334855;

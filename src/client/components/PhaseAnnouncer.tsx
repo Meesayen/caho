@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { css, cx } from 'emotion'
 import { motion, Variants } from 'framer-motion'
-import { Game } from '~types'
+import { Game } from '~/types'
 
 interface Props {
   phase: Game['phase']

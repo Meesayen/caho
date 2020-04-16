@@ -1,0 +1,10 @@
+{
+  "name": "cah-online-client",
+  "version": "1.0.0",
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
+  "devDependencies": {
+    "@babel/core": "^7.9.0"
+  }
+}

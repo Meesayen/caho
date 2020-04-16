@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { css } from 'emotion'
 import { Link } from 'wouter'
-import { useSocketData, useEmit, useEmitEvent } from '~utils/socket'
-import { Game } from '~types'
+import { useSocketData, useEmit, useEmitEvent } from '~/utils/socket'
+import { Game } from '~/types'
 
 const cls = css`
   padding-top: 240px;

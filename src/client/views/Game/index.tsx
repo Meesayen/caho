@@ -1,11 +1,11 @@
 import React, { useEffect, useCallback, lazy, Suspense } from 'react'
 import { css } from 'emotion'
 import { useLocation } from 'wouter'
-import { GameContext } from '~utils/gameContext'
-import { useSocketData, useEmitEvent, useSocketContext } from '~utils/socket'
-import { Game } from '~types'
-import { LoadingPhase } from '~components/LoadingPhase'
-import PlayersStatus from '~views/Game/PlayersStatus'
+import { GameContext } from '~/utils/gameContext'
+import { useSocketData, useEmitEvent, useSocketContext } from '~/utils/socket'
+import { Game as GameType } from '~/types'
+import { LoadingPhase } from '~/components/LoadingPhase'
+import PlayersStatus from '~/views/Game/PlayersStatus'
 
 const GameTable = lazy(() => import('./Table'))
 
@@ -16,7 +16,7 @@ interface Props {
 const Game: React.FC<Props> = ({ gameId }) => {
   const { socket } = useSocketContext()
   const [, setLocation] = useLocation()
-  const [gameStatus, err] = useSocketData<Game>('game:status')
+  const [gameStatus, err] = useSocketData<GameType>('game:status')
   const joinGame = useEmitEvent('game:join-game')
   const leaveGame = useEmitEvent('game:leave-game')
   const startingGame = useEmitEvent('game:starting')
