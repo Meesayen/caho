@@ -35,7 +35,7 @@ const cls = css`
       padding: 8px 16px;
       border: 1px solid #0003;
       border-radius: 3px;
-      max-width: 95%;
+      white-space: nowrap;
       font-weight: bold;
     }
 
