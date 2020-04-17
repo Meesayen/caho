@@ -9,7 +9,7 @@
     "watch:server": "nodemon --experimental-modules --experimental-json-modules ./src/server/index.js",
     "dev": "run-p watch:client watch:server",
     "build": "npm run build:client",
-    "start": "node --experimental-modules ./src/server/index.js",
+    "start": "node --experimental-modules --experimental-json-modules ./src/server/index.js",
     "test": "exit 0"
   },
   "author": "Meesayen",
