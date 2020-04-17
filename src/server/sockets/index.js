@@ -469,7 +469,6 @@ export function init(server) {
       // TODO: check if card sent is effectively in player's hand
       // to avoid cheating
 
-      // TODO: allow multiple answers
       PLAYERS[player.id].cards.answers = PLAYERS[
         player.id
       ].cards.answers.filter(c => !cards.includes(c.id))
