@@ -113,7 +113,7 @@ function createNewGame(id, socket) {
     questions: createShuffledDeck(QUESTION_CARDS),
     answers: createShuffledDeck(ANSWER_CARDS),
     question: null,
-    lang: 'eng',
+    lang: 'ita',
   }
   socket.emit('game:status', GAMES[id])
 }
