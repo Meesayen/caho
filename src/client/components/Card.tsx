@@ -96,6 +96,7 @@ interface Props {
   deck?: boolean
   size?: 'small' | 'regular'
   onClick?: (c: AnswerCard | QuestionCard) => void
+  idx?: number
 }
 
 export const Card: React.FC<Props> = ({
@@ -106,6 +107,7 @@ export const Card: React.FC<Props> = ({
   text,
   className,
   onClick,
+  idx,
 }) => {
   const pickNum = text ? countBlanks({ text }) : 0
 
@@ -127,7 +129,11 @@ export const Card: React.FC<Props> = ({
   const html = text ? marked(blankify(text)) : ''
 
   return (
-    <motion.div className={cx(cls, 'Card', ...classes)} onClick={emitClick}>
+    <motion.div
+      className={cx(cls, 'Card', ...classes)}
+      onClick={emitClick}
+      data-idx={idx}
+    >
       <div dangerouslySetInnerHTML={{ __html: html }}></div>
     </motion.div>
   )

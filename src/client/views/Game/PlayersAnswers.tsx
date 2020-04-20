@@ -19,6 +19,28 @@ const cls = css`
   }
 
   &.-read-answers {
+    .Card.-concealed {
+      position: relative;
+
+      &::after {
+        display: none;
+        content: attr(data-idx);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 32px;
+        color: #0009;
+      }
+
+      &:first-child:nth-last-child(2),
+      &:first-child:nth-last-child(3) {
+        &::after,
+        ~ .Card::after {
+          display: block;
+        }
+      }
+    }
     .Card.-revealed {
       cursor: initial;
 
@@ -134,7 +156,7 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
       {answers.map((cards, i) => {
         return (
           <div className="block u--flx -cc" key={`block-${i}`}>
-            {cards.map(card => (
+            {[...cards].reverse().map((card, i) => (
               <Card
                 className={cx(
                   card.text ? '-revealed' : '-concealed',
@@ -145,6 +167,7 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
                 size={'small'}
                 key={`card-${card.id}`}
                 onClick={onCardClick}
+                idx={cards.length - i}
               />
             ))}
           </div>
