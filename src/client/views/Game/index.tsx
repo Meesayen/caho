@@ -34,9 +34,10 @@ const Game: React.FC<Props> = ({ gameId }) => {
 
     if (err === 403) {
       setLocation('/sorry')
+      localStorage.setItem('player:uid', '')
     }
 
-    const puid = sessionStorage.getItem('player:uid')
+    const puid = localStorage.getItem('player:uid')
     joinGame({ gameId, puid })
 
     return () => {
@@ -53,7 +54,7 @@ const Game: React.FC<Props> = ({ gameId }) => {
   useEffect(() => {
     if (!gameStatus) return
 
-    sessionStorage.setItem(
+    localStorage.setItem(
       'player:uid',
       gameStatus.players.find(p => socket.id === p.id)?.uid ?? ''
     )

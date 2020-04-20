@@ -54,6 +54,7 @@ const Lobby: React.FC = () => {
   const createNewGame = useEmitEvent('game:create-new')
 
   useEffect(() => {
+    localStorage.setItem('player:uid', '')
     createNewGame()
   }, [])
 
