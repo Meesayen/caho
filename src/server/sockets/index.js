@@ -68,7 +68,14 @@ function createShuffledDeck(cards) {
   return shuffle(cardIndexes)
 }
 
-function createNewPlayer(gameId, socket, idx, puid) {
+function createNewPlayer(
+  gameId,
+  socket,
+  idx,
+  puid,
+  name = `Guest ${idx + 1}`,
+  avatar = ''
+) {
   GAME_SOCKETS[gameId][socket.id] = socket
 
   const oldPlayer = PLAYERS_LIMBO[puid]
@@ -95,8 +102,8 @@ function createNewPlayer(gameId, socket, idx, puid) {
     uid: uid(8),
     status: 'online',
     phase: 'cards-picking',
-    name: `Guest ${idx + 1}`,
-    avatar: '',
+    name,
+    avatar,
     gameId,
     role: 'player',
     answers: [],
@@ -109,7 +116,7 @@ function createNewGame(id, socket) {
     status: 'lobby',
     // the initial phase will be "deal"
     phase: 'deal',
-    players: [createNewPlayer(id, socket, 0)],
+    players: [],
     questions: createShuffledDeck(QUESTION_CARDS),
     answers: createShuffledDeck(ANSWER_CARDS),
     question: null,
@@ -286,49 +293,54 @@ export function init(server) {
     })
 
     // player actions - session
-    socket.on('game:join-game', ({ gameId, puid }) => {
-      // console.log('join game', socket.id)
-      const game = GAMES[gameId]
+    socket.on(
+      'game:join-game',
+      ({ gameId, puid, playerName, playerAvatar }) => {
+        // console.log('join game', socket.id)
+        const game = GAMES[gameId]
 
-      // no game found - 404
-      if (!game) return socket.emit('game:status', { error: 404 })
+        // no game found - 404
+        if (!game) return socket.emit('game:status', { error: 404 })
 
-      // no more space - 403
-      if (game.players.length >= 6) {
-        return socket.emit('game:status', { error: 403 })
-      }
-
-      if (!PLAYERS_LIMBO[puid] && game.status !== 'lobby') {
-        return socket.emit('game:status', { error: 403 })
-      }
-
-      if (!game.players.find(p => p.id === socket.id)) {
-        // create new player and join
-        const player = createNewPlayer(
-          gameId,
-          socket,
-          game.players.length,
-          puid
-        )
-
-        if (puid === player.uid) {
-          game.players = game.players.map(p => {
-            if (p.uid === player.uid) return player
-            return p
-          })
-        } else {
-          game.players.push(player)
+        // no more space - 403
+        if (game.players.length >= 6) {
+          return socket.emit('game:status', { error: 403 })
         }
+
+        if (!PLAYERS_LIMBO[puid] && game.status !== 'lobby') {
+          return socket.emit('game:status', { error: 403 })
+        }
+
+        if (!game.players.find(p => p.id === socket.id)) {
+          // create new player and join
+          const player = createNewPlayer(
+            gameId,
+            socket,
+            game.players.length,
+            puid,
+            playerName,
+            playerAvatar
+          )
+
+          if (puid === player.uid) {
+            game.players = game.players.map(p => {
+              if (p.uid === player.uid) return player
+              return p
+            })
+          } else {
+            game.players.push(player)
+          }
+        }
+
+        const player = game.players.find(p => p.id === socket.id)
+
+        broadcastGameStatus(GAMES[gameId])
+        socket.emit('player:status', {
+          ...player,
+          cards: PLAYERS[player.id].cards,
+        })
       }
-
-      const player = game.players.find(p => p.id === socket.id)
-
-      broadcastGameStatus(GAMES[gameId])
-      socket.emit('player:status', {
-        ...player,
-        cards: PLAYERS[player.id].cards,
-      })
-    })
+    )
     socket.on('game:leave-game', ({ gameId }) => {
       removePlayer(socket, gameId)
     })
