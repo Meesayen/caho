@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, lazy, Suspense } from 'react'
+import React, { useEffect, useCallback, lazy, Suspense, useState } from 'react'
 import { css } from 'emotion'
 import { useLocation } from 'wouter'
 import { GameContext } from '~/utils/gameContext'
@@ -6,6 +6,7 @@ import { useSocketData, useEmitEvent, useSocketContext } from '~/utils/socket'
 import { Game as GameType } from '~/types'
 import { LoadingPhase } from '~/components/LoadingPhase'
 import PlayersStatus from '~/views/Game/PlayersStatus'
+import Settings from '~/views/Game/Settings'
 
 const GameTable = lazy(() => import('./Table'))
 
@@ -13,9 +14,15 @@ interface Props {
   gameId?: string
 }
 
+interface Settings {
+  name: string
+  avatar: string
+}
+
 const Game: React.FC<Props> = ({ gameId }) => {
   const { socket } = useSocketContext()
   const [, setLocation] = useLocation()
+  const [settings, setSettings] = useState<Settings>({ name: '', avatar: '' })
   const [gameStatus, err] = useSocketData<GameType>('game:status')
   const joinGame = useEmitEvent('game:join-game')
   const leaveGame = useEmitEvent('game:leave-game')
@@ -25,6 +32,13 @@ const Game: React.FC<Props> = ({ gameId }) => {
   const onGameReady = useCallback(() => {
     startGame({ gameId })
   }, [gameId])
+
+  const updateSettings = useCallback(
+    (o: { name: string; avatar: string }) => {
+      setSettings({ ...o })
+    },
+    [gameId]
+  )
 
   useEffect(() => {
     if (!gameId || err === 404) {
@@ -37,13 +51,22 @@ const Game: React.FC<Props> = ({ gameId }) => {
       localStorage.setItem('player:uid', '')
     }
 
-    const puid = localStorage.getItem('player:uid')
-    joinGame({ gameId, puid })
+    if (settings.name) {
+      const puid = localStorage.getItem('player:uid')
+      joinGame({
+        gameId,
+        puid,
+        playerName: settings.name,
+        playerAvatar: settings.avatar,
+      })
+    }
+  }, [gameId, err, settings])
 
+  useEffect(() => {
     return () => {
       leaveGame({ gameId })
     }
-  }, [gameId, err])
+  }, [])
 
   useEffect(() => {
     if (gameStatus?.players.every(p => p.phase === 'ready')) {
@@ -59,6 +82,10 @@ const Game: React.FC<Props> = ({ gameId }) => {
       gameStatus.players.find(p => socket.id === p.id)?.uid ?? ''
     )
   }, [gameStatus])
+
+  if (!settings.name) {
+    return <Settings onSave={updateSettings} />
+  }
 
   if (!gameStatus || !gameId) {
     return null
