@@ -1,6 +1,7 @@
 import http from 'http'
 import polka from 'polka'
 import sirv from 'sirv'
+import compress from 'compression'
 import { init } from './sockets/index.js'
 import { readFileSync } from 'fs'
 
@@ -13,6 +14,7 @@ if (NODE_ENV === 'production') {
   const index = readFileSync('./dist/index.html')
   app
     .use(
+      compress(),
       sirv('dist', {
         maxAge: 31536000, // 1Y
         immutable: true,
