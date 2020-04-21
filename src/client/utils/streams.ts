@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import SimplePeer from 'simple-peer'
 import { useEmitEvent, useSocketContext } from '~/utils/socket'
 
@@ -16,9 +16,49 @@ interface PeerCache {
 }
 
 let myStream: MediaStream | null
+let videoOn: boolean = true
+
+type SetPropsFunction = (o: { withVideo: boolean }) => void
+type UseMyStreamHookRet = [MediaStream | null, SetPropsFunction]
+export function useMyStream(): UseMyStreamHookRet {
+  const [stream, setStream] = useState<MediaStream | null>(myStream)
+  const [withVideo, setWithVideo] = useState(videoOn)
+
+  useEffect(() => {
+    async function getMediaStream() {
+      try {
+        myStream = await navigator.mediaDevices.getUserMedia({
+          video: withVideo,
+          audio: true,
+        })
+        setStream(myStream)
+      } catch (err) {
+        /* TODO: handle the error */
+      }
+    }
+
+    getMediaStream()
+
+    return () => {
+      if (myStream) {
+        myStream.getVideoTracks().forEach(t => t.stop())
+        myStream.getAudioTracks().forEach(t => t.stop())
+        myStream = null
+      }
+    }
+  }, [withVideo])
+
+  const setProps = useCallback(({ withVideo = true }) => {
+    videoOn = withVideo
+    setWithVideo(withVideo)
+  }, [])
+
+  return [stream, setProps]
+}
 
 export function useStreams() {
   const { socket } = useSocketContext()
+  const [stream] = useMyStream()
   const [streams, setStreams] = useState<Record<string, MediaStream>>({})
 
   const sendSyn = useEmitEvent('streams:peers-syn')
@@ -27,31 +67,23 @@ export function useStreams() {
   const sendPassiveSignal = useEmitEvent('streams:peers-passive-signal')
 
   useEffect(() => {
+    if (stream) {
+      setStreams(streams => {
+        return { ...streams, [socket.id]: stream! }
+      })
+      sendSyn({ peerId: socket.id })
+    }
+  }, [stream])
+
+  useEffect(() => {
     let activePeers: PeerCache[] = []
     let passivePeers: PeerCache[] = []
 
-    async function getMediaStream() {
-      try {
-        myStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
-        setStreams(streams => {
-          return { ...streams, [socket.id]: myStream! }
-        })
-        sendSyn({ peerId: socket.id })
-      } catch (err) {
-        /* TODO: handle the error */
-      }
-    }
-
-    getMediaStream()
-
     socket.on('streams:peers-syn', ({ peerId }: AckSynResponse) => {
-      if (!myStream) return
+      if (!stream) return
       const peer = new SimplePeer({
         initiator: false,
-        stream: myStream,
+        stream,
       })
 
       peer.on('signal', data => {
@@ -74,10 +106,10 @@ export function useStreams() {
     })
 
     socket.on('streams:peers-ack', ({ peerId }: AckSynResponse) => {
-      if (!myStream) return
+      if (!stream) return
       const peer = new SimplePeer({
         initiator: true,
-        stream: myStream,
+        stream,
       })
 
       peer.on('signal', data => {
