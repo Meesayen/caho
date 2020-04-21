@@ -3,6 +3,8 @@ import { css, cx } from 'emotion'
 import { useSocketContext, useEmitEvent } from '~/utils/socket'
 import { Game, Player } from '~/types'
 import { useStreams } from '~/utils/streams'
+import Avatar from '~/components/Avatar'
+import Video from './Video'
 
 const clsPlayerId = css`
   width: 100%;
@@ -137,6 +139,10 @@ const cls = css`
     box-shadow: 0 1px 3px #0001;
     background: whitesmoke;
 
+    .media {
+      height: calc(100vw / 8 * 3 / 4);
+    }
+
     & + & {
       box-shadow: 0 1px 3px #0001, -2px 0 0 #ddd3, -1px 0 0 #9994;
     }
@@ -170,6 +176,8 @@ const StatusBar: React.FC<Props> = ({ game, onReady }) => {
     <div className={cx(cls, 'u--flx')}>
       {players.map(p => {
         const isMe = p.id === socket.id
+        const avatar = p.avatar
+
         return (
           <div
             className={cx(
@@ -180,7 +188,13 @@ const StatusBar: React.FC<Props> = ({ game, onReady }) => {
             key={p.id}
           >
             <PlayerIndicator player={p} />
-            <PlayerVideo stream={streams[p.id]} isMe={isMe} />
+            <div className="media">
+              {avatar ? (
+                <Avatar id={avatar} />
+              ) : (
+                <Video stream={streams[p.id]} isMe={isMe} />
+              )}
+            </div>
             {game.status !== 'started' ? (
               <ReadyButton player={p} isMe={isMe} onClick={onReady} />
             ) : null}
