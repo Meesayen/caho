@@ -76,6 +76,8 @@ export function useStreams() {
   }, [stream])
 
   useEffect(() => {
+    if (!stream) return
+
     let activePeers: PeerCache[] = []
     let passivePeers: PeerCache[] = []
 
@@ -170,7 +172,7 @@ export function useStreams() {
         myStream = null
       }
     }
-  }, [])
+  }, [stream])
 
   return streams
 }
