@@ -8,6 +8,8 @@ import { blankify, countBlanks } from '~/utils/misc'
 const cls = css`
   width: 160px;
   height: 256px;
+  max-width: calc(25vh / 1.6);
+  max-height: 25vh;
   border-radius: 14px;
   border: 1px solid #0003;
   box-shadow: 1px 1px 4px #0002;
