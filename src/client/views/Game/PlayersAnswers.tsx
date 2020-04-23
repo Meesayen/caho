@@ -12,6 +12,8 @@ interface Props {
 
 const cls = css`
   height: 200px;
+  max-height: 20vh;
+
   .block {
     width: calc(100vw / 8);
     box-shadow: 0 1px 3px #0001;
