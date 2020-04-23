@@ -14,27 +14,28 @@ const cls = css`
   flex: 1;
   flex-direction: row-reverse;
 
-  &:not(.-enabled),
-  &.-judge {
-    pointer-events: none;
-  }
-
-  &.-player .Card {
-    cursor: pointer;
-  }
-
   .Card {
     margin-left: -48px;
 
     &:hover {
       z-index: 2;
       transform: scale(1.2);
+      margin-left: 8px;
+      margin-right: 8px;
     }
     &.-selected {
       transform: scale(1.05);
       transform-origin: bottom;
       box-shadow: 1px 1px 4px #0002, 0 0 0 2px goldenrod;
     }
+  }
+
+  &.-player .Card {
+    cursor: pointer;
+  }
+
+  &.-judge .Card {
+    box-shadow: 1px 1px 4px #0002 !important;
   }
 `
 
@@ -48,6 +49,8 @@ export const PlayerCards: React.FC<Props> = ({ game, player }) => {
 
   const chooseCard = useCallback(
     (card: AnswerCard) => {
+      if (!isEnabled || isJudge) return
+
       if (answers.includes(card.id)) {
         answers.splice(
           answers.findIndex(id => id === card.id),
