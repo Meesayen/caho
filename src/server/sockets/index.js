@@ -267,7 +267,8 @@ export function init(server) {
     // game
     socket.on('game:create-new', () => {
       // console.log('create game')
-      let gameId = uid(8)
+      // TODO: should check if there's an existing game with such id to avoid collisions
+      let gameId = uid(5).toUpperCase()
       createNewGame(gameId, socket)
     })
 
