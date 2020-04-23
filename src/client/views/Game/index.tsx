@@ -6,7 +6,6 @@ import { useSocketData, useEmitEvent, useSocketContext } from '~/utils/socket'
 import { Game as GameType } from '~/types'
 import { LoadingPhase } from '~/components/LoadingPhase'
 import PlayersStatus from '~/views/Game/PlayersStatus'
-import Settings from '~/views/Game/Settings'
 
 const GameTable = lazy(() => import('./Table'))
 
@@ -22,7 +21,6 @@ interface Settings {
 const Game: React.FC<Props> = ({ gameId }) => {
   const { socket } = useSocketContext()
   const [, setLocation] = useLocation()
-  const [settings, setSettings] = useState<Settings>({ name: '', avatar: '' })
   const [gameStatus, err] = useSocketData<GameType>('game:status')
   const joinGame = useEmitEvent('game:join-game')
   const leaveGame = useEmitEvent('game:leave-game')
@@ -32,13 +30,6 @@ const Game: React.FC<Props> = ({ gameId }) => {
   const onGameReady = useCallback(() => {
     startGame({ gameId })
   }, [gameId])
-
-  const updateSettings = useCallback(
-    (o: { name: string; avatar: string }) => {
-      setSettings({ ...o })
-    },
-    [gameId]
-  )
 
   useEffect(() => {
     if (!gameId || err === 404) {
@@ -51,16 +42,24 @@ const Game: React.FC<Props> = ({ gameId }) => {
       localStorage.setItem('player:uid', '')
     }
 
-    if (settings.name) {
-      const puid = localStorage.getItem('player:uid')
-      joinGame({
-        gameId,
-        puid,
-        playerName: settings.name,
-        playerAvatar: settings.avatar,
-      })
+    // TODO: maybe it would be cool to zip all this into an hash to put in the URL instead
+    // of bloating the session/local storage
+    const name = sessionStorage.getItem('player-name')
+    const avatar = sessionStorage.getItem('player-avatar')
+    const puid = localStorage.getItem('player:uid')
+
+    if (!name && !puid) {
+      setLocation('/lobby')
+      return
     }
-  }, [gameId, err, settings])
+
+    joinGame({
+      gameId,
+      puid,
+      playerName: name,
+      playerAvatar: avatar,
+    })
+  }, [gameId, err])
 
   useEffect(() => {
     return () => {
@@ -82,10 +81,6 @@ const Game: React.FC<Props> = ({ gameId }) => {
       gameStatus.players.find(p => socket.id === p.id)?.uid ?? ''
     )
   }, [gameStatus])
-
-  if (!settings.name) {
-    return <Settings onSave={updateSettings} />
-  }
 
   if (!gameStatus || !gameId) {
     return null

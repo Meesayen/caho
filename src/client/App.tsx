@@ -7,6 +7,7 @@ import { noiseImage } from '~/utils/misc'
 
 const Lobby = lazy(() => import('~/views/Lobby'))
 const Sorry = lazy(() => import('~/views/Sorry'))
+const Settings = lazy(() => import('~/views/Settings'))
 const Game = lazy(() => import('~/views/Game'))
 
 const cls = css`
@@ -45,6 +46,9 @@ export const App: React.FC = () => {
         <Suspense fallback={<div>Loading...</div>}>
           <Route path="/lobby" component={Lobby} />
           <Route path="/sorry" component={Sorry} />
+          <Route path="/settings/:gameId">
+            {params => <Settings gameId={params.gameId} />}
+          </Route>
           <Route path="/game/:gameId?">
             {params => <Game gameId={params.gameId} />}
           </Route>

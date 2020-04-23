@@ -6,11 +6,11 @@ import Video from '~/components/Video'
 import Avatar, { avatars } from '~/components/Avatar'
 
 const cls = css`
-  padding-top: 120px;
+  padding-top: 5vh;
   .panel {
     margin: 0 auto;
     width: 640px;
-    height: 800px;
+    max-height: 92vh;
     padding: 32px;
     border: 1px solid #0005;
     border-top-color: #0002;
@@ -55,6 +55,9 @@ const cls = css`
     .video {
       width: 400px;
       height: 300px;
+      max-width: 40vh;
+      max-height: 30vh;
+      margin: 0 auto;
     }
 
     .toggle {
@@ -149,26 +152,25 @@ const cls = css`
 `
 
 interface Props {
-  onSave?: (s: { name: string; avatar: string }) => void
+  gameId: string
 }
 
-function noop() {}
-
-const Settings: React.FC<Props> = ({ onSave = noop }) => {
+const Settings: React.FC<Props> = ({ gameId }) => {
   const [name, setName] = useState<string>('')
   const [avatar, setAvatar] = useState<string>('')
   const [videoOn, setVideoOn] = useState(true)
   const [stream, setStreamProps] = useMyStream()
-
-  const save = useCallback(() => {
-    onSave({ name, avatar })
-  }, [name, avatar])
 
   const toggleVideo = useCallback(() => {
     const newVal = !videoOn
     setVideoOn(newVal)
     setStreamProps({ withVideo: newVal })
   }, [videoOn])
+
+  useEffect(() => {
+    sessionStorage.setItem('player-name', name)
+    sessionStorage.setItem('player-avatar', avatar)
+  }, [name, avatar])
 
   return (
     <div className={cls}>
@@ -227,9 +229,12 @@ const Settings: React.FC<Props> = ({ onSave = noop }) => {
           <Link className="btn -back" to={`/lobby`}>
             Back
           </Link>
-          <div className={cx('btn', name ? '' : '-disabled')} onClick={save}>
+          <Link
+            className={cx('btn', name ? '' : '-disabled')}
+            to={`/game/${gameId}`}
+          >
             Submit
-          </div>
+          </Link>
         </section>
       </div>
     </div>
