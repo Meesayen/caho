@@ -146,12 +146,12 @@ export const PlayersAnswers: React.FC<Props> = ({ game, isJudge }) => {
       <div className="block u--flx -col -cc" key={`block-btn`}>
         {doneButtonActivated ? (
           <div className="btn" onClick={doneClicked}>
-            Done!
+            Next
           </div>
         ) : null}
         {newRoundButtonActivated ? (
           <div className="btn" onClick={newRoundClicked}>
-            New Round!
+            End Turn
           </div>
         ) : null}
       </div>
